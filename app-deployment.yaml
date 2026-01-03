@@ -12,39 +12,56 @@ spec:
       labels:
         app: springboot-k8s-mysql
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: mysql:8.0
+          command:
+            - sh
+            - -c
+            - |
+              until mysqladmin ping -h mysql -u root -p"$DB_PASSWORD" --silent; do
+                echo "Waiting for MySQL to be ready..."
+                sleep 5
+              done
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: password
       containers:
         - name: springboot-crud-k8s
           image: springboot-crud-k8s:1.0  #if this image is present locally then it will be fectched locally or else if its available in docker hub then from hub it will be pulled
           ports:
             - containerPort: 8080
           env:   # Setting Enviornmental Variables
-            - name: DB_HOST   # Setting Database host address from application.yaml file
-              value: mysql
-#              valueFrom :
-#                configMapKeyRef :
-#                  name : db-config
-#                  key :  host
+            - name: DB_HOST   # Setting Database host address from ConfigMap
+#              value: mysql // this is hardcoded value and we dont want it for security
+              valueFrom :
+                configMapKeyRef :
+                  name : db-config
+                  key :  host
 
-            - name: DB_NAME  # Setting Database name from application.yaml file
-              value: javatechie
-#              valueFrom :
-#                configMapKeyRef :
-#                  name : db-config
-#                  key :  dbName
+            - name: DB_NAME  # Setting Database name from ConfigMap
+#              value: javatechie
+              valueFrom :
+                configMapKeyRef :
+                  name : db-config
+                  key :  dbName
 
-            - name: DB_USERNAME  # Setting Database username from application.yaml file
-              value: root
-#              valueFrom :
-#                secretKeyRef :
-#                  name : mysql-secrets
-#                  key :  username
+            - name: DB_USERNAME  # Setting Database username from Secrets
+#              value: root
+              valueFrom :
+                secretKeyRef :
+                  name : mysql-secrets
+                  key :  username
 
-            - name: DB_PASSWORD # Setting Database password from application.yaml file
-              value: root
-#              valueFrom :
-#                secretKeyRef :
-#                  name : mysql-secrets
-#                  key :  password
+            - name: DB_PASSWORD # Setting Database password from Secrets
+#              value: root
+              valueFrom :
+                secretKeyRef :
+                  name : mysql-secrets
+                  key :  password
 
 ---
 

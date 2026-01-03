@@ -41,28 +41,31 @@ spec:
           name: mysql
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: root
-#              valueFrom :
-#                secretKeyRef :
-#                  name : mysql-secrets
-#                  key :  password
+#              value: root // this is hardcoded value and we dont want it for security
+              valueFrom :
+                secretKeyRef :
+                  name : mysql-secrets
+                  key :  password
 
             - name: MYSQL_DATABASE # Setting Database Name from a 'ConfigMap'
-              value: javatechie
-#              valueFrom :
-#                configMapKeyRef :
-#                  name : db-config
-#                  key :  dbName
+#              value: javatechie  // this is hardcoded value and we dont want it for security
+              valueFrom :
+                configMapKeyRef :
+                  name : db-config
+                  key :  dbName
           ports:
             - containerPort: 3306
               name: mysql
           volumeMounts:        # Mounting voulume obtained from Persistent Volume Claim
             - name: mysql-persistent-storage
               mountPath: /var/lib/mysql #This is the path in the container on which the mounting will take place.
-          readinessProbe:
+          readinessProbe: # 👈 HERE
             exec:
-              command: [ "mysqladmin", "ping", "-h", "localhost" ]
-            initialDelaySeconds: 20
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD
+            initialDelaySeconds: 30
             periodSeconds: 10
       volumes:
         - name: mysql-persistent-storage # Obtaining 'vloume' from PVC
