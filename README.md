@@ -108,6 +108,62 @@ kubectl get pods
 
 		example kubectl logs springboot-crud-deployment-5bd7b748-mx6ld 
 ```
+---------------------------------------------------
+---------------------------------------------------
+Implementing ConfigMap and Secrets in our SpringBoot crud example using MYSQL
+
+1. create a configmap yaml file(eg: mysql-configMap.yaml)
+
+```
+apiVersion: v1
+kind: ConfigMap	# it tells Kubernetes that this is a ConfigMap deployment object
+metadata:
+  name : db-config	# name of your deployment config
+data:
+  host : your db host name
+  dbName : your db name
+
+```
+
+2. create a secrets yaml file(eg: mysql-secrets.yaml)
+
+```
+apiVersion: v1
+kind: Secret	# it tells Kubernetes that this is a Secret deployment object
+metadata:
+  name : mysql-secrets	# name of your deployment secret
+data:
+  username : your encrypted username 
+  password : your encrypted password
+
+```
+Note: Inorder to encrypt in powershell see below
+-- Copy paste each line one by one and in $plainText = "mention your username/password"
+-- root is an example
+```
+$plainText = "root"
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($plainText)
+ $encoded = [Convert]::ToBase64String($bytes)
+ Write-Output $encoded
+
+```
+
+3. Now we will deploy the yaml file based on the below order
+   a. mysql-configMap.yaml
+   b. mysql-secrets.yaml
+   c. db-deployment.yaml
+   d. app-deployment.yaml
+4. Optional but recommended
+   -- connect to MySQL executable CLI to check whether our db is created or not
+```
+ kubectl exec -it mysql-5cf656f7dd-4zk89 -- bash
+mysql -h mysql -u root -p
+
+now enter the MySQL password
+```
+
+-- After all the above configurations, now update the configMap and secrets yaml properties
+-- so that it can be fetched from db-deployment.yaml and app-deployment.yaml files
 
 ++++++++++++++++++++++++++++++++++++++++++++++
 Reference:
